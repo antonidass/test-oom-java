@@ -24,6 +24,17 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+// ==== Таска для OpenShift S2I ====
+val copyJar by tasks.registering(Copy::class) {
+    dependsOn(tasks.named("build"))
+    from(layout.buildDirectory.dir("libs")) {
+        include("TestOomException-0.0.1-SNAPSHOT.jar")
+        exclude("*-sources.jar", "*-javadoc.jar")
+    }
+    into(System.getenv("DEPLOYMENTS_DIR") ?: "/deployments")
+}
+
+// Чтобы таска выполнялась всегда после build
+tasks.named("build") {
+    finalizedBy(copyJar)
 }
